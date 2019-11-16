@@ -7,14 +7,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.ParamEnum;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.InvertType;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -30,19 +22,17 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
-  private TalonSRX ShooterMaster = new TalonSRX(1);
-  private double power;
+  private Shooter shooter;
+  
 
   @Override 
   public void robotInit() {
-    ShooterMaster.setInverted(true);
-    enableMotors(false);
-
+    shooter = new Shooter();
+    SmartDashboard.putNumber("ShooterRPM", 0);
   }
 
   @Override
   public void robotPeriodic() {
-    power = SmartDashboard.getNumber("Shooter Power", 0);
   }
 
   @Override
@@ -55,12 +45,12 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    enableMotors(true);
   }
 
   @Override
   public void teleopPeriodic() {
-    
+    double rpm = SmartDashboard.getNumber("ShooterRPM", 0);
+    shooter.setTarget(rpm);
   }
 
   @Override
@@ -72,21 +62,6 @@ public class Robot extends TimedRobot {
   }
 
   public void disableInit() {
-    enableMotors(false);
-  }
-
-  private void enableMotors(boolean on) {
-    NeutralMode mode;
-    if (on) {
-      mode = NeutralMode.Brake;
-    }
-    else {
-      mode = NeutralMode.Coast;
-    }
-
-      ShooterMaster.setNeutralMode(mode);
-
-  
   }
 
 }

@@ -7,9 +7,9 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import frc.robot.lib.util.DataLogger;
-import frc.robot.loops.Loop;
 
-public class Shooter implements Loop
+
+public class Shooter
 {
 	// singleton class
     private static Shooter instance = null;
@@ -47,12 +47,11 @@ public class Shooter implements Loop
 	public final double kKd = 9.0;	// to resolve any overshoot, start at 10*Kp 
 	public final double kKi = 0.0;    
 
-	public static double kQuadEncoderGain = 60.0/12.0;			// Arm is on 60t sprocket, Encoder is on 12t sprocket.  
-	public static double kQuadEncoderUnitsPerRev = 4*64;
-	public static double kEncoderUnitsPerDeg = kQuadEncoderUnitsPerRev * kQuadEncoderGain / 360.0; 
+	public static double kQuadEncoderCodesPerRev = 1024;
+	public static double kQuadEncoderUnitsPerRev = 4*kQuadEncoderCodesPerRev;
+	public static double kQuadEncoderStatusFramePeriod = 0.001; // 100 ms
 
-    public final int    kAllowableError = (int)(0.25 * kEncoderUnitsPerDeg);
-    public final double kspinIntakeAngleDeg = 5; //0
+    public final int    kAllowableError = (int)(0.25 * kQuadEncoderUnitsPerRev);
 
     public final int kPeakCurrentLimit = 50;
     public final int kPeakCurrentDuration = 200;
@@ -95,29 +94,21 @@ public class Shooter implements Loop
         shooterMotor.enableCurrentLimit(true);
     }
     
-	@Override
-	public void onStart() 
-	{
-    }
 
-    
-	@Override
-	public void onStop() 
-	{
-        // stop all motors
-        shooterMotor.set(ControlMode.PercentOutput, 0.0);
-    }
-    
-	@Override
-	public void onLoop()
+
+    public void setTarget(double rpm)
     {
-
-    }   
-
-    public void setTarget(double RPM)
-    {
+        shooterMotor.set(ControlMode.Velocity, rpmToEncoderUnitsPerFrame(rpm));
     }
     
+	// Talon SRX reports position in rotations while in closed-loop Position mode
+	public static double encoderUnitsToRevolutions(int _encoderPosition) {	return (double)_encoderPosition / (double)kQuadEncoderUnitsPerRev; }
+	public static int revolutionsToEncoderUnits(double _rev) { return (int)(_rev / kQuadEncoderUnitsPerRev); }
+
+	// Talon SRX reports speed in RPM while in closed-loop Speed mode
+	public static double encoderUnitsPerFrameToRPM(int _encoderEdgesPerFrame) { return encoderUnitsToRevolutions(_encoderEdgesPerFrame)*60 / kQuadEncoderStatusFramePeriod; }
+	public static int rpmToEncoderUnitsPerFrame(double _rpm) { return (int)(revolutionsToEncoderUnits(_rpm)/60 * kQuadEncoderStatusFramePeriod); }
+
 
     
 	private final DataLogger logger = new DataLogger()
